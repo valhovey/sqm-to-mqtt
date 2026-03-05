@@ -1,6 +1,6 @@
 # SQM to Home Assistant MQTT
 
-<img width="618" height="400" alt="image" src="https://github.com/user-attachments/assets/10ebb31f-af1a-40eb-bbf3-5502d51a30f9" />
+<img width="300" alt="image" src="https://github.com/user-attachments/assets/10ebb31f-af1a-40eb-bbf3-5502d51a30f9" />
 
 Hello! I built this script to handle reading data from a Unihedron [SQM-LU](https://unihedron.com/projects/sqm-lu/) USB sky quality meter (SQM) and broadcast the readings over MQTT to Home Assistant. I also added the ability to query data from an Ambient Weather station if you have an API and APP key.
 
