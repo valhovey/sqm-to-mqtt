@@ -2,5 +2,10 @@
   "serial-path": "/dev/serial/by-id/TODO",
   "baudrate": 115200,
   "lat": 0,
-  "lon": 0
+  "lon": 0,
+  "ambient_weather_enable": false,
+  "ambient_weather": {
+    "api_key": "TODO",
+    "app_key": "TODO"
+  }
 }
