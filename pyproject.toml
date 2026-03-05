@@ -7,5 +7,6 @@ requires-python = ">=3.11"
 dependencies = [
     "paho-mqtt==2.1.0",
     "pyserial==3.5",
-    "skyfield==1.54"
+    "skyfield==1.54",
+    "requests==2.32.5"
 ]

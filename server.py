@@ -5,6 +5,7 @@ from skyfield.almanac import fraction_illuminated
 from datetime import datetime, timezone
 import serial
 import json
+import requests
 
 def get_config():
     with open('config.json', 'r') as file:
@@ -15,6 +16,42 @@ PORT = config["serial-path"]
 BAUD = config["baudrate"]
 LAT = config["lat"]
 LON = config["lon"]
+AMBIENT_WEATHER_ENABLE = config["ambient_weather_enable"]
+AMBIENT_API_KEY = config["ambient_weather"]["api_key"]
+AMBIENT_APP_KEY = config["ambient_weather"]["app_key"]
+
+def get_ambient_weather():
+    url = "https://api.ambientweather.net/v1/devices"
+    params = {
+        "apiKey": AMBIENT_API_KEY,
+        "applicationKey": AMBIENT_APP_KEY
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+
+    devices = response.json()
+
+    if not devices:
+        print("No stations found")
+        exit()
+
+    # Each device contains a list of data points
+    device = devices[0]
+
+    last_data = device["lastData"]
+
+    temperature = last_data.get("tempf")
+    humidity = last_data.get("humidity")
+    pressure = last_data.get("baromrelin")
+    tempc = round((temperature - 32) * (5/9), 2)
+
+    ambient = {
+        "air_temp_c": tempc,
+        "humidity_rh": humidity,
+        "pressure_inHg": pressure
+    }
+
+    return ambient
 
 def get_reading():
     with serial.Serial(
@@ -67,8 +104,9 @@ def get_mock_reading():
 if __name__ == "__main__":
     ts = load.timescale()
     now = ts.from_datetime(datetime.now(timezone.utc))
-    reading = get_reading()
+    reading = get_mock_reading()
     parsed = parse_reading(reading)
     moon = get_moon_stats(now)
+    ambient = get_ambient_weather()
 
-    print({**moon, **parsed})
+    print({**moon, **parsed, **ambient})
