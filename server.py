@@ -79,9 +79,9 @@ def get_moon_stats(now):
     illum = fraction_illuminated(eph, 'moon', now)
 
     moon = {
-        "alt_deg": round(alt.degrees, 2),
-        "az_deg": round(az.degrees, 2),
-        "illum": round(illum * 100, 2),
+        "moon_alt_deg": round(alt.degrees, 2),
+        "moon_az_deg": round(az.degrees, 2),
+        "moon_illum": round(illum * 100, 2),
     }
 
     return moon
@@ -93,20 +93,31 @@ def parse_reading(reading):
 
     parsed = {
         "sqm": sqm,
-        "temp_c": temp
+        "sensor_temp_c": temp
     }
 
     return parsed
+
+def get_all_data():
+    ts = load.timescale()
+    now_utc = datetime.now(timezone.utc)
+    now = ts.from_datetime(now_utc)
+    reading = get_reading()
+    parsed = parse_reading(reading)
+    moon = get_moon_stats(now)
+    ambient = get_ambient_weather()
+
+    return {
+        "now": now_utc.isoformat(),
+        **parsed,
+        **moon,
+        **ambient
+    }
 
 def get_mock_reading():
     return "r, 09.66m,0000012099Hz,0000000000c,0000000.000s, 024.8C"
 
 if __name__ == "__main__":
-    ts = load.timescale()
-    now = ts.from_datetime(datetime.now(timezone.utc))
-    reading = get_mock_reading()
-    parsed = parse_reading(reading)
-    moon = get_moon_stats(now)
-    ambient = get_ambient_weather()
-
-    print({**moon, **parsed, **ambient})
+    values = get_all_data()
+    
+    print(values)

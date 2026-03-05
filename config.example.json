@@ -7,5 +7,9 @@
   "ambient_weather": {
     "api_key": "TODO",
     "app_key": "TODO"
-  }
+  },
+  "mqtt_host": "192.168.100.76",
+  "mqtt_port": 1883,
+  "mqtt_username": "homeassistant",
+  "mqtt_password": "butts"
 }
