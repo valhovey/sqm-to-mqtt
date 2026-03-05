@@ -2,6 +2,8 @@
 
 from skyfield.api import load, Topos
 from skyfield.almanac import fraction_illuminated
+from ha_mqtt_discoverable import Settings, DeviceInfo
+from ha_mqtt_discoverable.sensors import Sensor, SensorInfo
 from datetime import datetime, timezone
 import serial
 import json
@@ -19,6 +21,97 @@ LON = config["lon"]
 AMBIENT_WEATHER_ENABLE = config["ambient_weather_enable"]
 AMBIENT_API_KEY = config["ambient_weather"]["api_key"]
 AMBIENT_APP_KEY = config["ambient_weather"]["app_key"]
+
+mqtt_settings = Settings.MQTT(
+    host=config["mqtt_host"],
+    username=config["mqtt_username"],
+    password=config["mqtt_password"]
+)
+
+device = DeviceInfo(
+    name="SQM Meter",
+    identifiers="sqm_meter",
+    manufacturer="Val",
+    model="SQM-LU"
+)
+
+sqm = SensorInfo(
+    name="Sky Quality",
+    unit_of_measurement="mag/(arcsec^2)",
+    unique_id="sqm_sensor_sqm",
+    device=device
+)
+
+sensor_temp = SensorInfo(
+    name="Sensor Temperature",
+    device_class="temperature",
+    unit_of_measurement="°C",
+    unique_id="sqm_sensor_temp",
+    device=device
+)
+
+air_temp = SensorInfo(
+    name="Air Temperature",
+    device_class="temperature",
+    unit_of_measurement="°C",
+    unique_id="sqm_air_temp",
+    device=device
+)
+
+air_pressure = SensorInfo(
+    name="Air Pressure",
+    device_class="atmospheric_pressure",
+    unit_of_measurement="inHg",
+    unique_id="sqm_air_pressure",
+    device=device
+)
+
+air_humidity = SensorInfo(
+    name="Air Humidity",
+    device_class="humidity",
+    unit_of_measurement="%",
+    unique_id="sqm_air_humidity",
+    device=device
+)
+
+moon_alt = SensorInfo(
+    name="Moon Altitude",
+    unit_of_measurement="˚",
+    unique_id="sqm_moon_alt",
+    device=device
+)
+
+moon_az = SensorInfo(
+    name="Moon Azimuth",
+    unit_of_measurement="˚",
+    unique_id="sqm_moon_az",
+    device=device
+)
+
+moon_illum = SensorInfo(
+    name="Moon Illumination",
+    unit_of_measurement="%",
+    unique_id="sqm_moon_illumination",
+    device=device
+)
+
+settings_sqm = Settings(mqtt=mqtt_settings, entity=sqm)
+settings_sensor_temp = Settings(mqtt=mqtt_settings, entity=sensor_temp)
+settings_air_temp = Settings(mqtt=mqtt_settings, entity=air_temp)
+settings_air_pressure = Settings(mqtt=mqtt_settings, entity=air_pressure)
+settings_air_humidity = Settings(mqtt=mqtt_settings, entity=air_humidity)
+settings_moon_alt = Settings(mqtt=mqtt_settings, entity=moon_alt)
+settings_moon_az = Settings(mqtt=mqtt_settings, entity=moon_az)
+settings_moon_illum = Settings(mqtt=mqtt_settings, entity=moon_illum)
+
+sqm_sensor = Sensor(settings_sqm)
+sensor_temp_sensor = Sensor(settings_sensor_temp)
+air_temp_sensor = Sensor(settings_air_temp)
+air_pressure_sensor = Sensor(settings_air_pressure)
+air_humidity_sensor = Sensor(settings_air_humidity)
+moon_alt_sensor = Sensor(settings_moon_alt)
+moon_az_sensor = Sensor(settings_moon_az)
+moon_illum_sensor = Sensor(settings_moon_illum)
 
 def get_ambient_weather():
     url = "https://api.ambientweather.net/v1/devices"
@@ -114,10 +207,21 @@ def get_all_data():
         **ambient
     }
 
+def publish_ha_data(data):
+    sqm_sensor.set_state(data["sqm"])
+    sensor_temp_sensor.set_state(data["sensor_temp_c"])
+    air_temp_sensor.set_state(data["air_temp_c"])
+    air_pressure_sensor.set_state(data["pressure_inHg"])
+    air_humidity_sensor.set_state(data["humidity_rh"])
+    moon_alt_sensor.set_state(float(data["moon_alt_deg"]))
+    moon_az_sensor.set_state(float(data["moon_az_deg"]))
+    moon_illum_sensor.set_state(float(data["moon_illum"]))
+
 def get_mock_reading():
     return "r, 09.66m,0000012099Hz,0000000000c,0000000.000s, 024.8C"
 
 if __name__ == "__main__":
     values = get_all_data()
+    publish_ha_data(values)
     
     print(values)

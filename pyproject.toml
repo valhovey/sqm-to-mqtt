@@ -5,8 +5,8 @@ description = "Script to publish SQM data over MQTT"
 readme = "readme.md"
 requires-python = ">=3.11"
 dependencies = [
-    "paho-mqtt==2.1.0",
     "pyserial==3.5",
     "skyfield==1.54",
-    "requests==2.32.5"
+    "requests==2.32.5",
+    "ha-mqtt-discoverable==0.23.0"
 ]
