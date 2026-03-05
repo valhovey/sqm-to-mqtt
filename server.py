@@ -4,7 +4,7 @@ import serial
 import json
 
 def get_config():
-    with open('data.json', 'r') as file:
+    with open('config.json', 'r') as file:
         return json.load(file)
 
 config = get_config()
