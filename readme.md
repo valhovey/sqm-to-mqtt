@@ -23,5 +23,5 @@ To run this script, just run `python server.py`. This will fire up all of the re
 
 As an example, here is a crontab setup to run this script every minute:
 ```
-* * * * * /home/val/Documents/Programs/Python/sqm-to-mqtt/.venv/bin/python /home/val/Documents/Programs/Python/sqm-to-mqtt/server.py
+* * * * * cd /home/val/Documents/Programs/Python/sqm-to-mqtt && ./.venv/bin/python server.py
 ```
