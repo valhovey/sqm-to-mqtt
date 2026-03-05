@@ -210,12 +210,14 @@ def get_all_data():
 def publish_ha_data(data):
     sqm_sensor.set_state(data["sqm"])
     sensor_temp_sensor.set_state(data["sensor_temp_c"])
-    air_temp_sensor.set_state(data["air_temp_c"])
-    air_pressure_sensor.set_state(data["pressure_inHg"])
-    air_humidity_sensor.set_state(data["humidity_rh"])
     moon_alt_sensor.set_state(float(data["moon_alt_deg"]))
     moon_az_sensor.set_state(float(data["moon_az_deg"]))
     moon_illum_sensor.set_state(float(data["moon_illum"]))
+
+    if AMBIENT_WEATHER_ENABLE:
+        air_temp_sensor.set_state(data["air_temp_c"])
+        air_pressure_sensor.set_state(data["pressure_inHg"])
+        air_humidity_sensor.set_state(data["humidity_rh"])
 
 def get_mock_reading():
     return "r, 09.66m,0000012099Hz,0000000000c,0000000.000s, 024.8C"
