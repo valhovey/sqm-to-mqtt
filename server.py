@@ -204,7 +204,7 @@ def parse_reading(reading):
 def get_all_data(now_utc):
     ts = load.timescale()
     now = ts.from_datetime(now_utc)
-    reading = get_mock_reading()
+    reading = get_reading()
     parsed = parse_reading(reading)
     moon = get_moon_stats(now)
     ambient = get_ambient_weather()
