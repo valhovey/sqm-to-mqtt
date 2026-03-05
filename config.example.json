@@ -1,4 +1,6 @@
 {
   "serial-path": "/dev/serial/by-id/TODO",
-  "baudrate": 115200
+  "baudrate": 115200,
+  "lat": 0,
+  "lon": 0
 }
