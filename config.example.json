@@ -1,0 +1,4 @@
+{
+  "serial-path": "/dev/serial/by-id/TODO",
+  "baudrate": 115200
+}
