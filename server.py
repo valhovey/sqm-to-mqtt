@@ -67,7 +67,7 @@ def get_mock_reading():
 if __name__ == "__main__":
     ts = load.timescale()
     now = ts.from_datetime(datetime.now(timezone.utc))
-    reading = get_mock_reading()
+    reading = get_reading()
     parsed = parse_reading(reading)
     moon = get_moon_stats(now)
 
