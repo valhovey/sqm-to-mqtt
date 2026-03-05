@@ -4,10 +4,13 @@ from skyfield.api import load, Topos
 from skyfield.almanac import fraction_illuminated
 from ha_mqtt_discoverable import Settings, DeviceInfo
 from ha_mqtt_discoverable.sensors import Sensor, SensorInfo
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 from datetime import datetime, timezone
 import serial
 import json
 import requests
+import time
 
 def get_config():
     with open('config.json', 'r') as file:
@@ -18,9 +21,16 @@ PORT = config["serial-path"]
 BAUD = config["baudrate"]
 LAT = config["lat"]
 LON = config["lon"]
+
 AMBIENT_WEATHER_ENABLE = config["ambient_weather_enable"]
 AMBIENT_API_KEY = config["ambient_weather"]["api_key"]
 AMBIENT_APP_KEY = config["ambient_weather"]["app_key"]
+
+INFLUXDB_ENABLE = config["influxdb_enable"]
+INFLUXDB_HOST = config["influxdb_host"]
+INFLUXDB_TOKEN = config["influxdb_token"]
+INFLUXDB_ORG = config["influxdb_org"]
+INFLUXDB_BUCKET = config["influxdb_bucket"]
 
 mqtt_settings = Settings.MQTT(
     host=config["mqtt_host"],
@@ -191,11 +201,10 @@ def parse_reading(reading):
 
     return parsed
 
-def get_all_data():
+def get_all_data(now_utc):
     ts = load.timescale()
-    now_utc = datetime.now(timezone.utc)
     now = ts.from_datetime(now_utc)
-    reading = get_reading()
+    reading = get_mock_reading()
     parsed = parse_reading(reading)
     moon = get_moon_stats(now)
     ambient = get_ambient_weather()
@@ -219,11 +228,45 @@ def publish_ha_data(data):
         air_pressure_sensor.set_state(data["pressure_inHg"])
         air_humidity_sensor.set_state(data["humidity_rh"])
 
+def publish_influxdb_data(data, now):
+    client = InfluxDBClient(
+        url=INFLUXDB_HOST,
+        token=INFLUXDB_TOKEN,
+        org=INFLUXDB_ORG
+    )
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+
+    point = (
+        Point("sky_monitor")
+        .tag("device", "sqm_meter")
+        .field("sqm", float(data["sqm"]))
+        .field("sensor_temp_c", float(data["sensor_temp_c"]))
+        .field("moon_alt_deg", float(data["moon_alt_deg"]))
+        .field("moon_az_deg", float(data["moon_az_deg"]))
+        .field("moon_illum", float(data["moon_illum"]))
+        .time(now)
+    )
+
+    if AMBIENT_WEATHER_ENABLE:
+        point.field("air_temp_c", float(data["air_temp_c"]))
+        point.field("pressure_inHg", float(data["pressure_inHg"]))
+        point.field("humidity_rh", float(data["humidity_rh"]))
+
+    write_api.write(
+        bucket=INFLUXDB_BUCKET,
+        org=INFLUXDB_ORG,
+        record=point
+    )
+
 def get_mock_reading():
     return "r, 09.66m,0000012099Hz,0000000000c,0000000.000s, 024.8C"
 
 if __name__ == "__main__":
-    values = get_all_data()
+    now_utc = datetime.now(timezone.utc)
+    values = get_all_data(now_utc)
     publish_ha_data(values)
+
+    if INFLUXDB_ENABLE:
+        publish_influxdb_data(values, now_utc)
     
     print(values)

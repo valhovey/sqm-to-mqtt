@@ -11,5 +11,10 @@
   "mqtt_host": "192.168.100.76",
   "mqtt_port": 1883,
   "mqtt_username": "homeassistant",
-  "mqtt_password": "butts"
+  "mqtt_password": "butts",
+  "influxdb_enable": false,
+  "influxdb_host": "http://127.0.0.1:8086",
+  "influxdb_token": "butts",
+  "influxdb_org": "org",
+  "influxdb_bucket": "bucket"
 }
