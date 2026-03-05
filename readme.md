@@ -20,3 +20,8 @@ Start by copying over `config.example.json` to `config.json` and update values f
 This project is managed with `uv`, which you can get set up using [their documentation](https://docs.astral.sh/uv/guides/install-python/). Installation can be done with `uv sync`. Make sure to source the virtual env with `source .venv/bin/activate` to get the packages in your environment.
 
 To run this script, just run `python server.py`. This will fire up all of the required tools to connect to the SQM meter/Ambient Weather/MQTT and will then broadcast the sensor data to Home Assistant. Each run is a single data point, so you'll likely want to use `crontab` to set this up to run periodically.
+
+As an example, here is a crontab setup to run this script every minute:
+```
+* * * * * /home/val/Documents/Programs/Python/sqm-to-mqtt/.venv/bin/python /home/val/Documents/Programs/Python/sqm-to-mqtt/server.py
+```
