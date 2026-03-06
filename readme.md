@@ -15,6 +15,7 @@ Required that you have:
 Optional:
 * Ambient Weather station API and app key
 * InfluxDB host to store data long-term
+* Pirate Weather API key for cloud coverage
 
 Start by copying over `config.example.json` to `config.json` and update values for your setup. Latitude and longitude are not broadcast, they are only used to calculate the moon metadata like altitude and illuminance. You can leave Ambient Weather disabled if you don't have that set up. You can also configure InfluxDB if you'd like to publish this data in a way that is long-lived (since Home Assistant only retains a short window of data).
 

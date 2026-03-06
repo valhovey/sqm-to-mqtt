@@ -32,6 +32,9 @@ INFLUXDB_TOKEN = config["influxdb_token"]
 INFLUXDB_ORG = config["influxdb_org"]
 INFLUXDB_BUCKET = config["influxdb_bucket"]
 
+PIRATE_WEATHER_ENABLE = config["pirate_weather_enable"]
+PIRATE_WEATHER_API_KEY = config["pirate_weather_api_key"]
+
 mqtt_settings = Settings.MQTT(
     host=config["mqtt_host"],
     username=config["mqtt_username"],
@@ -105,6 +108,13 @@ moon_illum = SensorInfo(
     device=device
 )
 
+cloud_coverage = SensorInfo(
+    name="Cloud Coverage",
+    unit_of_measurement="%",
+    unique_id="sqm_cloud_coverage",
+    device=device
+)
+
 settings_sqm = Settings(mqtt=mqtt_settings, entity=sqm)
 settings_sensor_temp = Settings(mqtt=mqtt_settings, entity=sensor_temp)
 settings_air_temp = Settings(mqtt=mqtt_settings, entity=air_temp)
@@ -113,6 +123,7 @@ settings_air_humidity = Settings(mqtt=mqtt_settings, entity=air_humidity)
 settings_moon_alt = Settings(mqtt=mqtt_settings, entity=moon_alt)
 settings_moon_az = Settings(mqtt=mqtt_settings, entity=moon_az)
 settings_moon_illum = Settings(mqtt=mqtt_settings, entity=moon_illum)
+settings_cloud_coverage = Settings(mqtt=mqtt_settings, entity=cloud_coverage)
 
 sqm_sensor = Sensor(settings_sqm)
 sensor_temp_sensor = Sensor(settings_sensor_temp)
@@ -122,6 +133,7 @@ air_humidity_sensor = Sensor(settings_air_humidity)
 moon_alt_sensor = Sensor(settings_moon_alt)
 moon_az_sensor = Sensor(settings_moon_az)
 moon_illum_sensor = Sensor(settings_moon_illum)
+cloud_coverage_sensor = Sensor(settings_cloud_coverage)
 
 def get_ambient_weather():
     url = "https://api.ambientweather.net/v1/devices"
@@ -155,6 +167,21 @@ def get_ambient_weather():
     }
 
     return ambient
+
+def get_cloud_cover():
+    url = f"https://api.pirateweather.net/forecast/{PIRATE_WEATHER_API_KEY}/{LAT},{LON}"
+
+    params = {
+        "exclude": "minutely,hourly,daily,alerts,flags"
+    }
+
+    r = requests.get(url, params=params, timeout=5)
+    r.raise_for_status()
+
+    data = r.json()
+    cloud_fraction = data["currently"]["cloudCover"]
+
+    return round(cloud_fraction * 100, 2)
 
 def get_reading():
     with serial.Serial(
@@ -207,13 +234,21 @@ def get_all_data(now_utc):
     reading = get_reading()
     parsed = parse_reading(reading)
     moon = get_moon_stats(now)
-    ambient = get_ambient_weather()
+    ambient = {}
+    cloud_coverage = {}
+
+    try:
+        ambient = get_ambient_weather()
+        cloud_coverage = get_cloud_cover()
+    except:
+        print("Error fetching net data")
 
     return {
         "now": now_utc.isoformat(),
         **parsed,
         **moon,
-        **ambient
+        **ambient,
+        **cloud_coverage
     }
 
 def publish_ha_data(data):
@@ -227,6 +262,9 @@ def publish_ha_data(data):
         air_temp_sensor.set_state(data["air_temp_c"])
         air_pressure_sensor.set_state(data["pressure_inHg"])
         air_humidity_sensor.set_state(data["humidity_rh"])
+
+    if PIRATE_WEATHER_ENABLE:
+        cloud_coverage_sensor.set_state(data["cloud_coverage"])
 
 def publish_influxdb_data(data, now):
     client = InfluxDBClient(
@@ -251,6 +289,9 @@ def publish_influxdb_data(data, now):
         point.field("air_temp_c", float(data["air_temp_c"]))
         point.field("pressure_inHg", float(data["pressure_inHg"]))
         point.field("humidity_rh", float(data["humidity_rh"]))
+
+    if PIRATE_WEATHER_ENABLE:
+        point.field("cloud_coverage", data["cloud_coverage"])
 
     write_api.write(
         bucket=INFLUXDB_BUCKET,
