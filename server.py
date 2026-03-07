@@ -181,7 +181,7 @@ def get_cloud_cover():
     data = r.json()
     cloud_fraction = data["currently"]["cloudCover"]
 
-    return round(cloud_fraction * 100, 2)
+    return { "cloud_coverage": round(cloud_fraction * 100, 2) }
 
 def get_reading():
     with serial.Serial(
