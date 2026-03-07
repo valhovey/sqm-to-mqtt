@@ -21,6 +21,7 @@ PORT = config["serial-path"]
 BAUD = config["baudrate"]
 LAT = config["lat"]
 LON = config["lon"]
+OFFSET = config["sqm_offset"]
 
 AMBIENT_WEATHER_ENABLE = config["ambient_weather_enable"]
 AMBIENT_API_KEY = config["ambient_weather"]["api_key"]
@@ -218,7 +219,7 @@ def get_moon_stats(now):
 
 def parse_reading(reading):
     values = list(map(str.strip, reading.split(",")))
-    sqm = float(values[1][:-1])
+    sqm = float(values[1][:-1]) + OFFSET
     temp = float(values[5][:-1])
 
     parsed = {
